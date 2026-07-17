@@ -59,8 +59,15 @@ const authSlice = createSlice({
     logOut(state) {
       state.currentUserId = null;
     },
+    updateProfile(state, action: PayloadAction<{ id: string; name: string; email: string }>) {
+      const user = state.users.find((u) => u.id === action.payload.id);
+      if (user) {
+        user.name = action.payload.name;
+        user.email = action.payload.email;
+      }
+    },
   },
 });
 
-export const { signUp, logIn, logOut } = authSlice.actions;
+export const { signUp, logIn, logOut, updateProfile } = authSlice.actions;
 export default authSlice.reducer;

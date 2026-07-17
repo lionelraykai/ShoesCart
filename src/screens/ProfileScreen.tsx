@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Avatar, Button, Divider, Surface, Text, useTheme } from 'react-native-paper';
+import { Avatar, Button, Divider, Modal, Portal, Surface, Text, TextInput, useTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ConfirmDialog } from '@/components/ConfirmDialog';
@@ -8,21 +8,67 @@ import { MaxContentWidth, Spacing, WebTopBarInset } from '@/constants/theme';
 import { persistor } from '@/store';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { selectCurrentUser } from '@/store/selectors';
-import { logOut } from '@/store/slices/authSlice';
+import { logOut, updateProfile } from '@/store/slices/authSlice';
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function ProfileScreen() {
   const dispatch = useAppDispatch();
   const theme = useTheme();
   const currentUser = useAppSelector(selectCurrentUser);
+  const allUsers = useAppSelector((state) => state.auth.users);
   const shoeCount = useAppSelector((state) => state.shoes.items.length);
   const orderCount = useAppSelector((state) => state.orders.items.length);
 
   const [logOutDialogVisible, setLogOutDialogVisible] = useState(false);
   const [resetDialogVisible, setResetDialogVisible] = useState(false);
 
+  // Edit profile state
+  const [editVisible, setEditVisible] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editErrors, setEditErrors] = useState<{ name?: string; email?: string }>({});
+
   if (!currentUser) return null;
 
   const isAdmin = currentUser.role === 'admin';
+
+  function openEdit() {
+    setEditName(currentUser!.name);
+    setEditEmail(currentUser!.email);
+    setEditErrors({});
+    setEditVisible(true);
+  }
+
+  function validateEdit(): boolean {
+    const errors: { name?: string; email?: string } = {};
+    if (!editName.trim()) errors.name = 'Name is required';
+    if (!EMAIL_PATTERN.test(editEmail.trim())) {
+      errors.email = 'Enter a valid email address';
+    } else if (
+      allUsers.some(
+        (u) =>
+          u.email.toLowerCase() === editEmail.trim().toLowerCase() &&
+          u.id !== currentUser!.id
+      )
+    ) {
+      errors.email = 'This email is already used by another account';
+    }
+    setEditErrors(errors);
+    return Object.keys(errors).length === 0;
+  }
+
+  function handleSave() {
+    if (!validateEdit()) return;
+    dispatch(
+      updateProfile({
+        id: currentUser!.id,
+        name: editName.trim(),
+        email: editEmail.trim().toLowerCase(),
+      })
+    );
+    setEditVisible(false);
+  }
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -31,15 +77,27 @@ export function ProfileScreen() {
 
         {/* User info card */}
         <Surface style={styles.userCard} elevation={2}>
-          {/* Coloured top strip */}
           <View style={[styles.cardAccent, { backgroundColor: isAdmin ? '#16A34A' : '#0369A1' }]} />
 
           <View style={styles.cardBody}>
-            <Avatar.Text
-              size={64}
-              label={currentUser.name.slice(0, 2).toUpperCase()}
-              style={[styles.avatar, { backgroundColor: isAdmin ? '#16A34A' : '#0369A1' }]}
-            />
+            <View style={styles.avatarRow}>
+              <Avatar.Text
+                size={64}
+                label={currentUser.name.slice(0, 2).toUpperCase()}
+                style={[styles.avatar, { backgroundColor: isAdmin ? '#16A34A' : '#0369A1' }]}
+              />
+              {/* Edit button */}
+              <Button
+                mode="outlined"
+                icon="pencil-outline"
+                onPress={openEdit}
+                style={styles.editButton}
+                compact
+              >
+                Edit Profile
+              </Button>
+            </View>
+
             <View style={styles.accountInfo}>
               <View style={styles.nameRow}>
                 <Text variant="titleLarge" style={styles.userName}>{currentUser.name}</Text>
@@ -81,22 +139,26 @@ export function ProfileScreen() {
           Log Out
         </Button>
 
-        <Divider />
+        {isAdmin && (
+          <>
+            <Divider />
 
-        <View style={styles.section}>
-          <Text variant="titleSmall" style={styles.sectionTitle}>App Data</Text>
-          <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-            {shoeCount} shoes in catalog · {orderCount} orders placed
-          </Text>
-          <Button
-            mode="outlined"
-            textColor={theme.colors.error}
-            onPress={() => setResetDialogVisible(true)}
-            style={styles.dangerButton}
-          >
-            Reset app data
-          </Button>
-        </View>
+            <View style={styles.section}>
+              <Text variant="titleSmall" style={styles.sectionTitle}>App Data</Text>
+              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                {shoeCount} shoes in catalog · {orderCount} orders placed
+              </Text>
+              <Button
+                mode="outlined"
+                textColor={theme.colors.error}
+                onPress={() => setResetDialogVisible(true)}
+                style={styles.dangerButton}
+              >
+                Reset app data
+              </Button>
+            </View>
+          </>
+        )}
 
         <Divider />
 
@@ -109,6 +171,78 @@ export function ProfileScreen() {
           </Text>
         </View>
       </View>
+
+      {/* ── Edit Profile Modal ── */}
+      <Portal>
+        <Modal
+          visible={editVisible}
+          onDismiss={() => setEditVisible(false)}
+          contentContainerStyle={[styles.modal, { backgroundColor: theme.colors.surface }]}
+        >
+          {/* Modal accent strip */}
+          <View style={[styles.modalAccent, { backgroundColor: isAdmin ? '#16A34A' : '#0369A1' }]} />
+
+          <View style={styles.modalBody}>
+            <Text variant="titleLarge" style={styles.modalTitle}>Edit Profile</Text>
+            <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+              Update your display name and email address.
+            </Text>
+
+            <View style={styles.modalFields}>
+              <TextInput
+                label="Name"
+                value={editName}
+                onChangeText={(v) => {
+                  setEditName(v);
+                  if (editErrors.name) setEditErrors((e) => ({ ...e, name: undefined }));
+                }}
+                mode="outlined"
+                error={!!editErrors.name}
+              />
+              {editErrors.name ? (
+                <Text variant="bodySmall" style={{ color: theme.colors.error }}>
+                  {editErrors.name}
+                </Text>
+              ) : null}
+
+              <TextInput
+                label="Email"
+                value={editEmail}
+                onChangeText={(v) => {
+                  setEditEmail(v);
+                  if (editErrors.email) setEditErrors((e) => ({ ...e, email: undefined }));
+                }}
+                mode="outlined"
+                autoCapitalize="none"
+                keyboardType="email-address"
+                error={!!editErrors.email}
+              />
+              {editErrors.email ? (
+                <Text variant="bodySmall" style={{ color: theme.colors.error }}>
+                  {editErrors.email}
+                </Text>
+              ) : null}
+            </View>
+
+            <View style={styles.modalActions}>
+              <Button
+                mode="outlined"
+                onPress={() => setEditVisible(false)}
+                style={styles.modalBtn}
+              >
+                Cancel
+              </Button>
+              <Button
+                mode="contained"
+                onPress={handleSave}
+                style={styles.modalBtn}
+              >
+                Save Changes
+              </Button>
+            </View>
+          </View>
+        </Modal>
+      </Portal>
 
       <ConfirmDialog
         visible={logOutDialogVisible}
@@ -165,7 +299,15 @@ const styles = StyleSheet.create({
     padding: Spacing.four,
     gap: Spacing.three,
   },
+  avatarRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   avatar: {},
+  editButton: {
+    borderRadius: 10,
+  },
   accountInfo: {
     gap: Spacing.one,
   },
@@ -215,5 +357,34 @@ const styles = StyleSheet.create({
   },
   dangerButton: {
     borderRadius: 12,
+  },
+  // Modal
+  modal: {
+    marginHorizontal: Spacing.four,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  modalAccent: {
+    height: 6,
+  },
+  modalBody: {
+    padding: Spacing.four,
+    gap: Spacing.three,
+  },
+  modalTitle: {
+    fontWeight: '800',
+  },
+  modalFields: {
+    gap: Spacing.two,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: Spacing.two,
+    justifyContent: 'flex-end',
+    marginTop: Spacing.one,
+  },
+  modalBtn: {
+    borderRadius: 12,
+    flex: 1,
   },
 });
