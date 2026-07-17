@@ -14,10 +14,17 @@ export function EmptyState({ icon, title, message }: EmptyStateProps) {
 
   return (
     <View style={styles.container}>
-      <Icon source={icon} size={48} color={theme.colors.onSurfaceVariant} />
-      <Text variant="titleMedium" style={styles.title}>
+      {/* Icon inside a soft circular backdrop */}
+      <View style={[styles.iconBackdrop, { backgroundColor: theme.colors.surfaceVariant }]}>
+        <View style={[styles.iconInner, { backgroundColor: theme.colors.primaryContainer }]}>
+          <Icon source={icon} size={40} color={theme.colors.primary} />
+        </View>
+      </View>
+
+      <Text variant="titleLarge" style={[styles.title, { color: theme.colors.onSurface }]}>
         {title}
       </Text>
+
       {message ? (
         <Text
           variant="bodyMedium"
@@ -35,12 +42,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: Spacing.five,
-    gap: Spacing.two,
+    gap: Spacing.three,
+  },
+  iconBackdrop: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconInner: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   title: {
     textAlign: 'center',
+    fontWeight: '700',
   },
   message: {
     textAlign: 'center',
+    lineHeight: 22,
+    maxWidth: 280,
   },
 });
