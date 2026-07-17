@@ -1,0 +1,49 @@
+{
+  "expo": {
+    "name": "ShoeCart",
+    "slug": "shoes-cart",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/app-logo.png",
+    "scheme": "shoecart",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "icon": "./assets/images/app-logo.png"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E8F8EE",
+        "foregroundImage": "./assets/images/app-logo.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/app-logo.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#16A34A",
+          "image": "./assets/images/app-logo.png",
+          "imageWidth": 76
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "94096528-8c5e-4421-980d-08c63a0a32e6"
+      }
+    },
+    "owner": "sagarkumarneel"
+  }
+}
