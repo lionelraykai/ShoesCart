@@ -2,7 +2,7 @@ import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { Button, Icon, Snackbar, Text, useTheme } from 'react-native-paper';
+import { Button, Chip, Icon, Snackbar, Text, useTheme } from 'react-native-paper';
 
 import { QuantityStepper } from '@/components/QuantityStepper';
 import { SizeSelector } from '@/components/SizeSelector';
@@ -44,45 +44,67 @@ export function ShoeDetailScreen({ shoeId }: ShoeDetailScreenProps) {
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Hero image */}
         {image ? (
-          <Image
-            source={image}
-            style={[styles.image, { backgroundColor: theme.colors.surfaceVariant }]}
-            contentFit="contain"
-          />
+          <View style={[styles.imageWrapper, { backgroundColor: theme.colors.surfaceVariant }]}>
+            <Image
+              source={image}
+              style={styles.image}
+              contentFit="contain"
+            />
+          </View>
         ) : (
           <View style={[styles.imagePlaceholder, { backgroundColor: theme.colors.surfaceVariant }]}>
-            <Icon source="shoe-sneaker" size={72} color={theme.colors.onSurfaceVariant} />
+            <Icon source="shoe-sneaker" size={80} color={theme.colors.onSurfaceVariant} />
           </View>
         )}
+
         <View style={styles.details}>
-          <Text variant="labelLarge" style={{ color: theme.colors.onSurfaceVariant }}>
+          {/* Brand chip */}
+          <Chip
+            compact
+            style={[styles.brandChip, { backgroundColor: theme.colors.primaryContainer }]}
+            textStyle={[styles.brandChipText, { color: theme.colors.onPrimaryContainer }]}
+          >
             {shoe.brand}
-          </Text>
-          <Text variant="headlineSmall">{shoe.name}</Text>
-          <Text variant="titleLarge" style={{ color: theme.colors.primary }}>
+          </Chip>
+
+          <Text variant="headlineSmall" style={styles.shoeName}>{shoe.name}</Text>
+
+          <Text variant="headlineMedium" style={[styles.price, { color: theme.colors.primary }]}>
             {formatPrice(shoe.price)}
           </Text>
 
+          {/* Divider */}
+          <View style={[styles.divider, { backgroundColor: theme.colors.outline }]} />
+
           <View style={styles.section}>
-            <Text variant="titleSmall">Select a size</Text>
+            <Text variant="titleSmall" style={styles.sectionLabel}>Select Size</Text>
             <SizeSelector sizes={shoe.sizes} selected={selectedSize} onSelect={setSelectedSize} />
           </View>
 
           <View style={styles.section}>
-            <Text variant="titleSmall">Quantity</Text>
+            <Text variant="titleSmall" style={styles.sectionLabel}>Quantity</Text>
             <QuantityStepper quantity={quantity} onChange={setQuantity} />
           </View>
         </View>
       </ScrollView>
 
-      <View style={[styles.footer, { borderTopColor: theme.colors.outline }]}>
+      <View style={[styles.footer, { borderTopColor: theme.colors.outline, backgroundColor: theme.colors.surface }]}>
+        {selectedSize !== null && (
+          <Text variant="bodySmall" style={[styles.totalLabel, { color: theme.colors.onSurfaceVariant }]}>
+            Total: {formatPrice(shoe.price * quantity)}
+          </Text>
+        )}
         <Button
           mode="contained"
           disabled={selectedSize === null}
           onPress={handleAddToCart}
-          style={styles.addButton}>
-          {selectedSize === null ? 'Select a size' : `Add to Cart · ${formatPrice(shoe.price * quantity)}`}
+          style={styles.addButton}
+          contentStyle={styles.addButtonContent}
+          labelStyle={styles.addButtonLabel}
+        >
+          {selectedSize === null ? 'Select a Size First' : 'Add to Cart'}
         </Button>
       </View>
 
@@ -91,7 +113,7 @@ export function ShoeDetailScreen({ shoeId }: ShoeDetailScreenProps) {
         onDismiss={() => setConfirmationVisible(false)}
         duration={2500}
         action={{ label: 'View Cart', onPress: () => router.push('/cart') }}>
-        Added to cart
+        Added to cart ✓
       </Snackbar>
     </View>
   );
@@ -110,7 +132,11 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: Spacing.six,
   },
+  imageWrapper: {
+    overflow: 'hidden',
+  },
   image: {
+    width: '100%',
     aspectRatio: 4 / 3,
   },
   imagePlaceholder: {
@@ -120,17 +146,52 @@ const styles = StyleSheet.create({
   },
   details: {
     padding: Spacing.four,
-    gap: Spacing.one,
+    gap: Spacing.three,
+  },
+  brandChip: {
+    alignSelf: 'flex-start',
+    borderRadius: 20,
+  },
+  brandChipText: {
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    fontSize: 12,
+  },
+  shoeName: {
+    fontWeight: '800',
+    marginTop: -Spacing.one,
+  },
+  price: {
+    fontWeight: '800',
+  },
+  divider: {
+    height: StyleSheet.hairlineWidth,
+    marginVertical: Spacing.one,
   },
   section: {
-    marginTop: Spacing.four,
     gap: Spacing.two,
+  },
+  sectionLabel: {
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
   footer: {
     borderTopWidth: StyleSheet.hairlineWidth,
     padding: Spacing.three,
+    gap: Spacing.one,
+  },
+  totalLabel: {
+    textAlign: 'center',
   },
   addButton: {
-    borderRadius: Spacing.two,
+    borderRadius: 14,
+  },
+  addButtonContent: {
+    paddingVertical: Spacing.one,
+  },
+  addButtonLabel: {
+    fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
 });

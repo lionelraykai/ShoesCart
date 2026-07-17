@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text } from 'react-native-paper';
+import { Text, useTheme } from 'react-native-paper';
 
 import { OrdersTable } from '@/components/OrdersTable';
 import { Spacing, WebTopBarInset } from '@/constants/theme';
@@ -12,6 +12,7 @@ export function OrdersScreen() {
   const allOrders = useAppSelector((state) => state.orders.items);
   const users = useAppSelector((state) => state.auth.users);
   const currentUser = useAppSelector(selectCurrentUser);
+  const theme = useTheme();
   const isAdmin = currentUser?.role === 'admin';
 
   const orders = useMemo(
@@ -25,9 +26,18 @@ export function OrdersScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <Text variant="headlineSmall" style={styles.header}>
-        {isAdmin ? 'All Orders' : 'My Orders'}
-      </Text>
+      <View style={styles.header}>
+        <Text variant="headlineSmall" style={styles.title}>
+          {isAdmin ? 'All Orders' : 'My Orders'}
+        </Text>
+        {orders.length > 0 && (
+          <View style={[styles.countBadge, { backgroundColor: theme.colors.primaryContainer }]}>
+            <Text variant="labelSmall" style={[styles.countText, { color: theme.colors.onPrimaryContainer }]}>
+              {orders.length} {orders.length === 1 ? 'order' : 'orders'}
+            </Text>
+          </View>
+        )}
+      </View>
       <OrdersTable
         orders={orders}
         emptyTitle="No orders yet"
@@ -47,8 +57,22 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
     paddingHorizontal: Spacing.three,
     paddingTop: WebTopBarInset + Spacing.two,
     paddingBottom: Spacing.two,
+  },
+  title: {
+    fontWeight: '800',
+  },
+  countBadge: {
+    borderRadius: 12,
+    paddingHorizontal: Spacing.two,
+    paddingVertical: 3,
+  },
+  countText: {
+    fontWeight: '700',
   },
 });

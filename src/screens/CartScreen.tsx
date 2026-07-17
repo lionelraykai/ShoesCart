@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Icon, IconButton, Text, useTheme } from 'react-native-paper';
+import { Button, Icon, IconButton, Surface, Text, useTheme } from 'react-native-paper';
 
 import { EmptyState } from '@/components/EmptyState';
 import { QuantityStepper } from '@/components/QuantityStepper';
@@ -59,7 +59,7 @@ export function CartScreen() {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <Text variant="headlineSmall" style={styles.header}>
-        Cart
+        My Cart
       </Text>
       <FlatList
         data={rows}
@@ -69,7 +69,7 @@ export function CartScreen() {
           if (!item.shoe) return null;
           const image = getShoeImage(item.shoe);
           return (
-            <View style={styles.row}>
+            <Surface style={styles.card} elevation={1}>
               {image ? (
                 <Image
                   source={image}
@@ -79,15 +79,18 @@ export function CartScreen() {
               ) : (
                 <View
                   style={[styles.thumbnailPlaceholder, { backgroundColor: theme.colors.surfaceVariant }]}>
-                  <Icon source="shoe-sneaker" size={24} color={theme.colors.onSurfaceVariant} />
+                  <Icon source="shoe-sneaker" size={28} color={theme.colors.onSurfaceVariant} />
                 </View>
               )}
               <View style={styles.rowDetails}>
-                <Text variant="titleSmall" numberOfLines={1}>
-                  {item.shoe.brand} {item.shoe.name}
+                <Text variant="titleSmall" numberOfLines={1} style={styles.shoeName}>
+                  {item.shoe.name}
+                </Text>
+                <Text variant="labelSmall" style={[styles.brandLabel, { color: theme.colors.primary }]}>
+                  {item.shoe.brand.toUpperCase()}
                 </Text>
                 <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                  Size {item.cartItem.size} · {formatPrice(item.shoe.price)}
+                  Size {item.cartItem.size}
                 </Text>
                 <View style={styles.rowActions}>
                   <QuantityStepper
@@ -99,14 +102,15 @@ export function CartScreen() {
                   <IconButton
                     icon="delete-outline"
                     size={20}
+                    iconColor={theme.colors.error}
                     onPress={() => dispatch(removeFromCart(item.cartItem.id))}
                   />
                 </View>
               </View>
-              <Text variant="titleSmall">
+              <Text variant="titleSmall" style={[styles.itemTotal, { color: theme.colors.primary }]}>
                 {formatPrice(item.shoe.price * item.cartItem.quantity)}
               </Text>
-            </View>
+            </Surface>
           );
         }}
         ListEmptyComponent={
@@ -119,14 +123,20 @@ export function CartScreen() {
       />
 
       {rows.length > 0 && (
-        <View style={[styles.footer, { borderTopColor: theme.colors.outline }]}>
+        <View style={[styles.footer, { borderTopColor: theme.colors.outline, backgroundColor: theme.colors.surface }]}>
           <View style={styles.totalRow}>
-            <Text variant="titleMedium">Total</Text>
-            <Text variant="titleLarge" style={{ color: theme.colors.primary }}>
+            <Text variant="titleMedium" style={styles.totalLabel}>Order Total</Text>
+            <Text variant="headlineSmall" style={[styles.totalAmount, { color: theme.colors.primary }]}>
               {formatPrice(total)}
             </Text>
           </View>
-          <Button mode="contained" onPress={handlePlaceOrder} style={styles.placeOrderButton}>
+          <Button
+            mode="contained"
+            onPress={handlePlaceOrder}
+            style={styles.placeOrderButton}
+            contentStyle={styles.placeOrderContent}
+            labelStyle={styles.placeOrderLabel}
+          >
             Place Order
           </Button>
         </View>
@@ -143,38 +153,52 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     paddingTop: WebTopBarInset + Spacing.two,
     paddingBottom: Spacing.two,
+    fontWeight: '800',
   },
   listContent: {
     paddingHorizontal: Spacing.three,
     paddingBottom: BottomTabInset + Spacing.four,
-    gap: Spacing.three,
+    gap: Spacing.two,
     flexGrow: 1,
   },
-  row: {
+  card: {
     flexDirection: 'row',
     gap: Spacing.three,
     alignItems: 'center',
+    borderRadius: 16,
+    padding: Spacing.three,
   },
   thumbnail: {
-    width: 64,
-    height: 64,
-    borderRadius: Spacing.two,
+    width: 80,
+    height: 80,
+    borderRadius: 12,
   },
   thumbnailPlaceholder: {
-    width: 64,
-    height: 64,
-    borderRadius: Spacing.two,
+    width: 80,
+    height: 80,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
   rowDetails: {
     flex: 1,
-    gap: Spacing.half,
+    gap: 2,
+  },
+  shoeName: {
+    fontWeight: '700',
+  },
+  brandLabel: {
+    fontWeight: '600',
+    letterSpacing: 0.5,
   },
   rowActions: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: Spacing.one,
+  },
+  itemTotal: {
+    fontWeight: '700',
+    alignSelf: 'flex-start',
   },
   footer: {
     borderTopWidth: StyleSheet.hairlineWidth,
@@ -186,7 +210,20 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  totalLabel: {
+    fontWeight: '600',
+  },
+  totalAmount: {
+    fontWeight: '800',
+  },
   placeOrderButton: {
-    borderRadius: Spacing.two,
+    borderRadius: 14,
+  },
+  placeOrderContent: {
+    paddingVertical: Spacing.one,
+  },
+  placeOrderLabel: {
+    fontSize: 16,
+    fontWeight: '700',
   },
 });

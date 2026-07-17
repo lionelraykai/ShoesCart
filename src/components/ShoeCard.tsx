@@ -19,33 +19,37 @@ export function ShoeCard({ shoe, onPress, actions }: ShoeCardProps) {
   const image = getShoeImage(shoe);
 
   return (
-    <Card mode="elevated" onPress={onPress} style={styles.card}>
+    <Card mode="elevated" onPress={onPress} style={styles.card} elevation={2}>
       {image ? (
         <View style={[styles.cover, { backgroundColor: theme.colors.surfaceVariant }]}>
           <Image source={image} style={styles.coverImage} contentFit="contain" />
+          <View style={styles.imageOverlay} />
+          <View style={styles.priceBadge}>
+            <Text variant="labelMedium" style={styles.priceBadgeText}>
+              {formatPrice(shoe.price)}
+            </Text>
+          </View>
         </View>
       ) : (
-        <View
-          style={[styles.placeholder, { backgroundColor: theme.colors.surfaceVariant }]}
-          testID="shoe-image-placeholder">
-          <Icon source="shoe-sneaker" size={40} color={theme.colors.onSurfaceVariant} />
+        <View style={[styles.placeholder, { backgroundColor: theme.colors.surfaceVariant }]}>
+          <Icon source="shoe-sneaker" size={48} color={theme.colors.onSurfaceVariant} />
+          <View style={styles.priceBadge}>
+            <Text variant="labelMedium" style={styles.priceBadgeText}>
+              {formatPrice(shoe.price)}
+            </Text>
+          </View>
         </View>
       )}
       <Card.Content style={styles.content}>
-        <Text variant="labelMedium" style={{ color: theme.colors.onSurfaceVariant }}>
-          {shoe.brand}
+        <Text variant="labelSmall" style={[styles.brand, { color: theme.colors.primary }]}>
+          {shoe.brand.toUpperCase()}
         </Text>
-        <Text variant="titleMedium" numberOfLines={1}>
+        <Text variant="titleMedium" numberOfLines={1} style={styles.name}>
           {shoe.name}
         </Text>
-        <View style={styles.metaRow}>
-          <Text variant="titleSmall" style={{ color: theme.colors.primary }}>
-            {formatPrice(shoe.price)}
-          </Text>
-          <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-            {shoe.sizes.length} size{shoe.sizes.length === 1 ? '' : 's'} available
-          </Text>
-        </View>
+        <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+          {shoe.sizes.length} size{shoe.sizes.length === 1 ? '' : 's'}
+        </Text>
       </Card.Content>
       {actions ? <Card.Actions>{actions}</Card.Actions> : null}
     </Card>
@@ -55,9 +59,10 @@ export function ShoeCard({ shoe, onPress, actions }: ShoeCardProps) {
 const styles = StyleSheet.create({
   card: {
     flex: 1,
+    overflow: 'hidden',
   },
   cover: {
-    aspectRatio: 4 / 3,
+    aspectRatio: 1,
     overflow: 'hidden',
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
@@ -66,19 +71,45 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
+  imageOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 56,
+    backgroundColor: 'rgba(0,0,0,0.18)',
+  },
+  priceBadge: {
+    position: 'absolute',
+    bottom: Spacing.two,
+    right: Spacing.two,
+    backgroundColor: '#16A34A',
+    borderRadius: 20,
+    paddingHorizontal: Spacing.two,
+    paddingVertical: 3,
+  },
+  priceBadgeText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
   placeholder: {
-    aspectRatio: 4 / 3,
+    aspectRatio: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+    overflow: 'hidden',
   },
   content: {
-    gap: Spacing.half,
+    gap: 2,
     paddingTop: Spacing.two,
+    paddingBottom: Spacing.two,
   },
-  metaRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: Spacing.one,
+  brand: {
+    letterSpacing: 0.8,
+    fontWeight: '600',
+  },
+  name: {
+    fontWeight: '700',
   },
 });

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Avatar, Badge, Button, Divider, Text, useTheme } from 'react-native-paper';
+import { Avatar, Button, Divider, Surface, Text, useTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ConfirmDialog } from '@/components/ConfirmDialog';
@@ -22,38 +22,78 @@ export function ProfileScreen() {
 
   if (!currentUser) return null;
 
+  const isAdmin = currentUser.role === 'admin';
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <View style={styles.content}>
-        <Text variant="headlineSmall">Profile</Text>
+        <Text variant="headlineSmall" style={styles.pageTitle}>Profile</Text>
 
-        <View style={styles.accountRow}>
-          <Avatar.Text size={48} label={currentUser.name.slice(0, 2).toUpperCase()} />
-          <View style={styles.accountInfo}>
-            <View style={styles.nameRow}>
-              <Text variant="titleMedium">{currentUser.name}</Text>
-              <Badge style={currentUser.role === 'admin' ? styles.adminBadge : styles.userBadge}>
-                {currentUser.role === 'admin' ? 'Admin' : 'User'}
-              </Badge>
+        {/* User info card */}
+        <Surface style={styles.userCard} elevation={2}>
+          {/* Coloured top strip */}
+          <View style={[styles.cardAccent, { backgroundColor: isAdmin ? '#16A34A' : '#0369A1' }]} />
+
+          <View style={styles.cardBody}>
+            <Avatar.Text
+              size={64}
+              label={currentUser.name.slice(0, 2).toUpperCase()}
+              style={[styles.avatar, { backgroundColor: isAdmin ? '#16A34A' : '#0369A1' }]}
+            />
+            <View style={styles.accountInfo}>
+              <View style={styles.nameRow}>
+                <Text variant="titleLarge" style={styles.userName}>{currentUser.name}</Text>
+                <View style={[styles.roleBadge, { backgroundColor: isAdmin ? '#DCFCE7' : '#DBEAFE' }]}>
+                  <Text variant="labelSmall" style={[styles.roleText, { color: isAdmin ? '#14532D' : '#1E3A5F' }]}>
+                    {isAdmin ? '⚙ Admin' : '👤 User'}
+                  </Text>
+                </View>
+              </View>
+              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                {currentUser.email}
+              </Text>
             </View>
-            <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-              {currentUser.email}
-            </Text>
-          </View>
-        </View>
 
-        <Button mode="outlined" onPress={() => setLogOutDialogVisible(true)}>
+            {/* Stat chips */}
+            <View style={styles.statsRow}>
+              <View style={[styles.statChip, { backgroundColor: theme.colors.surfaceVariant }]}>
+                <Text variant="headlineSmall" style={[styles.statNumber, { color: theme.colors.primary }]}>
+                  {shoeCount}
+                </Text>
+                <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>Shoes</Text>
+              </View>
+              <View style={[styles.statChip, { backgroundColor: theme.colors.surfaceVariant }]}>
+                <Text variant="headlineSmall" style={[styles.statNumber, { color: theme.colors.primary }]}>
+                  {orderCount}
+                </Text>
+                <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>Orders</Text>
+              </View>
+            </View>
+          </View>
+        </Surface>
+
+        <Button
+          mode="outlined"
+          onPress={() => setLogOutDialogVisible(true)}
+          style={styles.logoutButton}
+          contentStyle={styles.buttonContent}
+        >
           Log Out
         </Button>
 
         <Divider />
 
         <View style={styles.section}>
-          <Text variant="titleSmall">App data</Text>
+          <Text variant="titleSmall" style={styles.sectionTitle}>App Data</Text>
           <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
             {shoeCount} shoes in catalog · {orderCount} orders placed
           </Text>
-          <Button mode="outlined" textColor={theme.colors.error} onPress={() => setResetDialogVisible(true)}>
+          <Button
+            mode="outlined"
+            textColor={theme.colors.error}
+            onPress={() => setResetDialogVisible(true)}
+            style={styles.dangerButton}
+          >
             Reset app data
           </Button>
         </View>
@@ -61,7 +101,7 @@ export function ProfileScreen() {
         <Divider />
 
         <View style={styles.section}>
-          <Text variant="titleSmall">About</Text>
+          <Text variant="titleSmall" style={styles.sectionTitle}>About</Text>
           <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
             Shoe Cart is a React Native sample app. Accounts and data are stored locally on
             this device with redux-persist — no backend is used, so passwords are hashed on-device
@@ -111,26 +151,69 @@ const styles = StyleSheet.create({
     maxWidth: MaxContentWidth,
     alignSelf: 'center',
   },
-  accountRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  pageTitle: {
+    fontWeight: '800',
+  },
+  userCard: {
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  cardAccent: {
+    height: 8,
+  },
+  cardBody: {
+    padding: Spacing.four,
     gap: Spacing.three,
   },
+  avatar: {},
   accountInfo: {
-    gap: Spacing.half,
+    gap: Spacing.one,
   },
   nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.two,
+    flexWrap: 'wrap',
   },
-  adminBadge: {
-    backgroundColor: '#16A34A',
+  userName: {
+    fontWeight: '800',
   },
-  userBadge: {
-    backgroundColor: '#6B7280',
+  roleBadge: {
+    borderRadius: 12,
+    paddingHorizontal: Spacing.two,
+    paddingVertical: 3,
+  },
+  roleText: {
+    fontWeight: '700',
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: Spacing.two,
+  },
+  statChip: {
+    flex: 1,
+    borderRadius: 14,
+    padding: Spacing.three,
+    alignItems: 'center',
+    gap: 2,
+  },
+  statNumber: {
+    fontWeight: '800',
+  },
+  logoutButton: {
+    borderRadius: 12,
+  },
+  buttonContent: {
+    paddingVertical: Spacing.one,
   },
   section: {
     gap: Spacing.two,
+  },
+  sectionTitle: {
+    fontWeight: '700',
+    letterSpacing: 0.3,
+  },
+  dangerButton: {
+    borderRadius: 12,
   },
 });

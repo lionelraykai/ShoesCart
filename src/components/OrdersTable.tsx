@@ -1,5 +1,5 @@
 import { FlatList, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { Card, DataTable, Text, useTheme } from 'react-native-paper';
+import { DataTable, Surface, Text, useTheme } from 'react-native-paper';
 
 import { EmptyState } from '@/components/EmptyState';
 import { BottomTabInset, Spacing } from '@/constants/theme';
@@ -19,6 +19,10 @@ function summarizeItems(order: Order) {
   return order.items
     .map((item) => `${item.brand} ${item.name} (size ${item.size}) ×${item.quantity}`)
     .join('\n');
+}
+
+function getItemCount(order: Order) {
+  return order.items.reduce((sum, item) => sum + item.quantity, 0);
 }
 
 interface OrdersTableProps {
@@ -84,23 +88,54 @@ export function OrdersTable({ orders, emptyTitle, emptyMessage, getCustomerName 
       keyExtractor={(order) => order.id}
       contentContainerStyle={styles.cardList}
       renderItem={({ item: order }) => (
-        <Card mode="outlined">
-          <Card.Content style={styles.cardContent}>
-            <View style={styles.cardHeaderRow}>
-              <Text variant="titleSmall">#{order.id.slice(-6).toUpperCase()}</Text>
-              <Text variant="titleSmall" style={{ color: theme.colors.primary }}>
+        <Surface style={styles.card} elevation={1}>
+          {/* Order ID + Total row */}
+          <View style={styles.cardHeaderRow}>
+            <View style={styles.orderIdWrap}>
+              <Text variant="labelSmall" style={[styles.orderIdLabel, { color: theme.colors.onSurfaceVariant }]}>
+                ORDER
+              </Text>
+              <Text variant="titleMedium" style={styles.orderId}>
+                #{order.id.slice(-6).toUpperCase()}
+              </Text>
+            </View>
+            <View style={styles.totalWrap}>
+              <Text variant="labelSmall" style={[styles.totalLabel, { color: theme.colors.onSurfaceVariant }]}>
+                TOTAL
+              </Text>
+              <Text variant="titleMedium" style={[styles.totalAmount, { color: theme.colors.primary }]}>
                 {formatPrice(order.total)}
               </Text>
             </View>
+          </View>
+
+          {/* Divider */}
+          <View style={[styles.divider, { backgroundColor: theme.colors.outline }]} />
+
+          {/* Date + customer */}
+          <View style={styles.metaRow}>
             <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-              {formatDate(order.placedAt)}
-              {getCustomerName ? ` · ${getCustomerName(order)}` : ''}
+              🕐 {formatDate(order.placedAt)}
             </Text>
-            <Text variant="bodyMedium" style={styles.itemsText}>
-              {summarizeItems(order)}
+            {getCustomerName && (
+              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                👤 {getCustomerName(order)}
+              </Text>
+            )}
+          </View>
+
+          {/* Items count chip */}
+          <View style={[styles.itemsChip, { backgroundColor: theme.colors.surfaceVariant }]}>
+            <Text variant="labelSmall" style={{ color: theme.colors.primary, fontWeight: '700' }}>
+              {getItemCount(order)} item{getItemCount(order) !== 1 ? 's' : ''}
             </Text>
-          </Card.Content>
-        </Card>
+          </View>
+
+          {/* Items detail */}
+          <Text variant="bodySmall" style={[styles.itemsText, { color: theme.colors.onSurfaceVariant }]}>
+            {summarizeItems(order)}
+          </Text>
+        </Surface>
       )}
     />
   );
@@ -126,18 +161,54 @@ const styles = StyleSheet.create({
     flex: 0.8,
   },
   cardList: {
-    gap: Spacing.three,
+    gap: Spacing.two,
     padding: Spacing.three,
     paddingBottom: BottomTabInset + Spacing.four,
   },
-  cardContent: {
-    gap: Spacing.one,
+  card: {
+    borderRadius: 16,
+    padding: Spacing.three,
+    gap: Spacing.two,
   },
   cardHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  orderIdWrap: {
+    gap: 2,
+  },
+  orderIdLabel: {
+    letterSpacing: 0.8,
+    fontWeight: '600',
+  },
+  orderId: {
+    fontWeight: '800',
+  },
+  totalWrap: {
+    gap: 2,
+    alignItems: 'flex-end',
+  },
+  totalLabel: {
+    letterSpacing: 0.8,
+    fontWeight: '600',
+  },
+  totalAmount: {
+    fontWeight: '800',
+  },
+  divider: {
+    height: StyleSheet.hairlineWidth,
+  },
+  metaRow: {
+    gap: 4,
+  },
+  itemsChip: {
+    alignSelf: 'flex-start',
+    borderRadius: 10,
+    paddingHorizontal: Spacing.two,
+    paddingVertical: 3,
   },
   itemsText: {
-    marginTop: Spacing.one,
+    lineHeight: 20,
   },
 });
