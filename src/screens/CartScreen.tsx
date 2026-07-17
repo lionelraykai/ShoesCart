@@ -1,18 +1,23 @@
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Icon, IconButton, Surface, Text, useTheme } from 'react-native-paper';
+import {
+  Button,
+  Icon,
+  IconButton,
+  Surface,
+  Text,
+  useTheme,
+} from 'react-native-paper';
 
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { EmptyState } from '@/components/EmptyState';
 import { QuantityStepper } from '@/components/QuantityStepper';
 import { BottomTabInset, Spacing, WebTopBarInset } from '@/constants/theme';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { selectCurrentUser } from '@/store/selectors';
-import { removeFromCart, updateQuantity, clearCart } from '@/store/slices/cartSlice';
-import { placeOrder } from '@/store/slices/ordersSlice';
-import { CartItem, OrderItem } from '@/types';
+import { removeFromCart, updateQuantity } from '@/store/slices/cartSlice';
 import { formatPrice } from '@/utils/currency';
 import { getShoeImage } from '@/utils/shoeImage';
 
@@ -20,9 +25,9 @@ export function CartScreen() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const theme = useTheme();
+  
   const cartItems = useAppSelector((state) => state.cart.items);
   const shoes = useAppSelector((state) => state.shoes.items);
-  const currentUser = useAppSelector(selectCurrentUser);
 
   const rows = useMemo(
     () =>
@@ -35,32 +40,24 @@ export function CartScreen() {
 
   const total = rows.reduce((sum, row) => sum + (row.shoe?.price ?? 0) * row.cartItem.quantity, 0);
 
-  function handlePlaceOrder() {
-    const orderItems: OrderItem[] = rows
-      .filter((row): row is { cartItem: CartItem; shoe: NonNullable<typeof row.shoe> } =>
-        Boolean(row.shoe)
-      )
-      .map(({ cartItem, shoe }) => ({
-        shoeId: shoe.id,
-        brand: shoe.brand,
-        name: shoe.name,
-        price: shoe.price,
-        size: cartItem.size,
-        quantity: cartItem.quantity,
-      }));
+  // ── Delete confirmation ──
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [deleteTargetName, setDeleteTargetName] = useState('');
 
-    if (orderItems.length === 0 || !currentUser) return;
+  function confirmDelete(id: string, name: string) {
+    setDeleteTargetId(id);
+    setDeleteTargetName(name);
+  }
 
-    dispatch(placeOrder({ userId: currentUser.id, items: orderItems }));
-    dispatch(clearCart());
-    router.push('/orders');
+  function handleDelete() {
+    if (deleteTargetId) dispatch(removeFromCart(deleteTargetId));
+    setDeleteTargetId(null);
   }
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <Text variant="headlineSmall" style={styles.header}>
-        My Cart
-      </Text>
+      <Text variant="headlineSmall" style={styles.header}>My Cart</Text>
+
       <FlatList
         data={rows}
         keyExtractor={(row) => row.cartItem.id}
@@ -77,8 +74,7 @@ export function CartScreen() {
                   contentFit="contain"
                 />
               ) : (
-                <View
-                  style={[styles.thumbnailPlaceholder, { backgroundColor: theme.colors.surfaceVariant }]}>
+                <View style={[styles.thumbnailPlaceholder, { backgroundColor: theme.colors.surfaceVariant }]}>
                   <Icon source="shoe-sneaker" size={28} color={theme.colors.onSurfaceVariant} />
                 </View>
               )}
@@ -103,7 +99,7 @@ export function CartScreen() {
                     icon="delete-outline"
                     size={20}
                     iconColor={theme.colors.error}
-                    onPress={() => dispatch(removeFromCart(item.cartItem.id))}
+                    onPress={() => confirmDelete(item.cartItem.id, item.shoe!.name)}
                   />
                 </View>
               </View>
@@ -132,23 +128,33 @@ export function CartScreen() {
           </View>
           <Button
             mode="contained"
-            onPress={handlePlaceOrder}
+            onPress={() => router.push('/checkout')}
             style={styles.placeOrderButton}
             contentStyle={styles.placeOrderContent}
             labelStyle={styles.placeOrderLabel}
+            icon="arrow-right"
           >
-            Place Order
+            Proceed to Checkout
           </Button>
         </View>
       )}
+
+      {/* ── Delete confirmation ─────────────────────────────── */}
+      <ConfirmDialog
+        visible={!!deleteTargetId}
+        title="Remove item?"
+        message={`Remove "${deleteTargetName}" from your cart?`}
+        confirmLabel="Remove"
+        destructive
+        onDismiss={() => setDeleteTargetId(null)}
+        onConfirm={handleDelete}
+      />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-  },
+  safeArea: { flex: 1 },
   header: {
     paddingHorizontal: Spacing.three,
     paddingTop: WebTopBarInset + Spacing.two,
@@ -168,62 +174,25 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: Spacing.three,
   },
-  thumbnail: {
-    width: 80,
-    height: 80,
-    borderRadius: 12,
-  },
+  thumbnail: { width: 80, height: 80, borderRadius: 12 },
   thumbnailPlaceholder: {
-    width: 80,
-    height: 80,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 80, height: 80, borderRadius: 12,
+    alignItems: 'center', justifyContent: 'center',
   },
-  rowDetails: {
-    flex: 1,
-    gap: 2,
-  },
-  shoeName: {
-    fontWeight: '700',
-  },
-  brandLabel: {
-    fontWeight: '600',
-    letterSpacing: 0.5,
-  },
-  rowActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: Spacing.one,
-  },
-  itemTotal: {
-    fontWeight: '700',
-    alignSelf: 'flex-start',
-  },
+  rowDetails: { flex: 1, gap: 2 },
+  shoeName: { fontWeight: '700' },
+  brandLabel: { fontWeight: '600', letterSpacing: 0.5 },
+  rowActions: { flexDirection: 'row', alignItems: 'center', marginTop: Spacing.one },
+  itemTotal: { fontWeight: '700', alignSelf: 'flex-start' },
   footer: {
     borderTopWidth: StyleSheet.hairlineWidth,
     padding: Spacing.three,
     gap: Spacing.two,
   },
-  totalRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  totalLabel: {
-    fontWeight: '600',
-  },
-  totalAmount: {
-    fontWeight: '800',
-  },
-  placeOrderButton: {
-    borderRadius: 14,
-  },
-  placeOrderContent: {
-    paddingVertical: Spacing.one,
-  },
-  placeOrderLabel: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
+  totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  totalLabel: { fontWeight: '600' },
+  totalAmount: { fontWeight: '800' },
+  placeOrderButton: { borderRadius: 14 },
+  placeOrderContent: { paddingVertical: Spacing.one },
+  placeOrderLabel: { fontSize: 16, fontWeight: '700' },
 });

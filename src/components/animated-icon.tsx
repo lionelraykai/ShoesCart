@@ -1,7 +1,8 @@
 import { Image } from 'expo-image';
 import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import { Dimensions, StyleSheet, View } from 'react-native';
+import { Dimensions, StyleSheet, useColorScheme, View } from 'react-native';
 import Animated, { Easing, Keyframe } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
@@ -11,6 +12,7 @@ const DURATION = 600;
 export function AnimatedSplashOverlay() {
   const [animate, setAnimate] = useState(false);
   const [visible, setVisible] = useState(true);
+  const isDark = useColorScheme() === 'dark';
 
   if (!visible) return null;
 
@@ -33,7 +35,7 @@ export function AnimatedSplashOverlay() {
     },
   });
 
-  const image = <Image style={styles.image} source={require('@/assets/images/expo-logo.png')} />;
+  const image = <Image style={styles.image} source={require('@/assets/images/app-logo.png')} contentFit="contain" />;
 
   return animate ? (
     <Animated.View
@@ -128,8 +130,10 @@ const styles = StyleSheet.create({
     zIndex: 100,
   },
   image: {
-    width: 76,
-    height: 71,
+    width: 90,
+    height: 90,
+    borderRadius: 20,
+    overflow: 'hidden',
   },
   background: {
     borderRadius: 40,

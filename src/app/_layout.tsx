@@ -1,5 +1,6 @@
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
 import { PaperProvider } from 'react-native-paper';
 import { useColorScheme } from 'react-native';
 import { Provider as ReduxProvider } from 'react-redux';
@@ -41,6 +42,7 @@ export default function RootLayout() {
       <PersistGate loading={null} persistor={persistor}>
         <PaperProvider theme={isDark ? paperDarkTheme : paperLightTheme}>
           <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
+            <StatusBar style={isDark ? 'light' : 'dark'} />
             <AnimatedSplashOverlay />
             <RootNavigator />
             <CartBanner />

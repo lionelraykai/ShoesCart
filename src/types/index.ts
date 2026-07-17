@@ -28,11 +28,22 @@ export interface OrderItem {
   quantity: number;
 }
 
+export interface Address {
+  fullName: string;
+  line1: string;
+  line2: string;
+  city: string;
+  state: string;
+  pincode: string;
+}
+
 export interface Order {
   id: string;
   userId: string;
   items: OrderItem[];
   total: number;
+  address?: Address; // Optional for backward compatibility with old orders
+  paymentMethod?: string;
   placedAt: number;
 }
 

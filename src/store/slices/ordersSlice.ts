@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-import { Order, OrderItem } from '@/types';
+import { Address, Order, OrderItem } from '@/types';
 import { generateId } from '@/utils/id';
 
 export interface OrdersState {
@@ -19,7 +19,7 @@ const ordersSlice = createSlice({
       reducer(state, action: PayloadAction<Order>) {
         state.items.unshift(action.payload);
       },
-      prepare({ userId, items }: { userId: string; items: OrderItem[] }) {
+      prepare({ userId, items, address, paymentMethod }: { userId: string; items: OrderItem[]; address: Address; paymentMethod: string }) {
         const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
         return {
           payload: {
@@ -27,6 +27,8 @@ const ordersSlice = createSlice({
             userId,
             items,
             total,
+            address,
+            paymentMethod,
             placedAt: Date.now(),
           } satisfies Order,
         };

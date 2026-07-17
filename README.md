@@ -137,4 +137,5 @@ src/
   the demo, kept separate from Redux state (see `src/constants/seedShoeImages.ts`) rather than
   persisted — swap them for licensed/original photography before using this beyond a demo.
 
-See [IMPROVEMENTS.md](IMPROVEMENTS.md) for what would change with more time.
+See [APPROACH.md](APPROACH.md) for how this was built and problems hit along the way, and
+[IMPROVEMENTS.md](IMPROVEMENTS.md) for what would change with more time.

@@ -21,7 +21,7 @@ export function CartBanner() {
     return sum + (shoe?.price ?? 0) * item.quantity;
   }, 0);
 
-  if (currentUser?.role !== 'user' || itemCount === 0 || pathname === '/cart') {
+  if (currentUser?.role !== 'user' || itemCount === 0 || pathname === '/cart' || pathname === '/checkout') {
     return null;
   }
 

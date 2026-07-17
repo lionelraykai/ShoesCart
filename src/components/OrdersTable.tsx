@@ -51,6 +51,7 @@ export function OrdersTable({ orders, emptyTitle, emptyMessage, getCustomerName 
             {getCustomerName ? (
               <DataTable.Title style={styles.customerColumn}>Customer</DataTable.Title>
             ) : null}
+            <DataTable.Title style={styles.infoColumn}>Delivery & Payment</DataTable.Title>
             <DataTable.Title style={styles.itemsColumn}>Items</DataTable.Title>
             <DataTable.Title numeric style={styles.totalColumn}>
               Total
@@ -69,6 +70,22 @@ export function OrdersTable({ orders, emptyTitle, emptyMessage, getCustomerName 
                   {getCustomerName(order)}
                 </DataTable.Cell>
               ) : null}
+              <DataTable.Cell style={styles.infoColumn}>
+                <View style={styles.wideInfoCell}>
+                  {order.address ? (
+                    <Text variant="bodySmall" numberOfLines={2}>
+                      📍 {order.address.city}, {order.address.state}
+                    </Text>
+                  ) : (
+                    <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>No address</Text>
+                  )}
+                  {order.paymentMethod ? (
+                    <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                      💳 {order.paymentMethod.toUpperCase()}
+                    </Text>
+                  ) : null}
+                </View>
+              </DataTable.Cell>
               <DataTable.Cell style={styles.itemsColumn}>
                 <Text variant="bodySmall">{summarizeItems(order)}</Text>
               </DataTable.Cell>
@@ -135,6 +152,40 @@ export function OrdersTable({ orders, emptyTitle, emptyMessage, getCustomerName 
           <Text variant="bodySmall" style={[styles.itemsText, { color: theme.colors.onSurfaceVariant }]}>
             {summarizeItems(order)}
           </Text>
+
+          {/* Delivery & Payment Info */}
+          {(order.address || order.paymentMethod) && (
+            <View style={[styles.orderInfoCard, { backgroundColor: theme.colors.surfaceVariant }]}>
+              {order.address && (
+                <View style={styles.orderInfoRow}>
+                  <Text variant="bodySmall">📍</Text>
+                  <View style={styles.orderInfoTextWrap}>
+                    <Text variant="labelSmall" style={{ fontWeight: '700' }}>{order.address.fullName}</Text>
+                    <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                      {order.address.line1}{order.address.line2 ? `, ${order.address.line2}` : ''}
+                    </Text>
+                    <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                      {order.address.city}, {order.address.state} – {order.address.pincode}
+                    </Text>
+                  </View>
+                </View>
+              )}
+              {order.address && order.paymentMethod && (
+                <View style={[styles.orderInfoDivider, { backgroundColor: theme.colors.outline }]} />
+              )}
+              {order.paymentMethod && (
+                <View style={styles.orderInfoRow}>
+                  <Text variant="bodySmall">💳</Text>
+                  <View style={styles.orderInfoTextWrap}>
+                    <Text variant="labelSmall" style={{ fontWeight: '700' }}>Payment Method</Text>
+                    <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                      {order.paymentMethod.toUpperCase()}
+                    </Text>
+                  </View>
+                </View>
+              )}
+            </View>
+          )}
         </Surface>
       )}
     />
@@ -153,6 +204,13 @@ const styles = StyleSheet.create({
   },
   customerColumn: {
     flex: 1.2,
+  },
+  infoColumn: {
+    flex: 1.5,
+  },
+  wideInfoCell: {
+    gap: 2,
+    justifyContent: 'center',
   },
   itemsColumn: {
     flex: 2,
@@ -210,5 +268,24 @@ const styles = StyleSheet.create({
   },
   itemsText: {
     lineHeight: 20,
+  },
+  orderInfoCard: {
+    borderRadius: 12,
+    padding: Spacing.two,
+    gap: Spacing.two,
+    marginTop: Spacing.one,
+  },
+  orderInfoRow: {
+    flexDirection: 'row',
+    gap: Spacing.two,
+    alignItems: 'flex-start',
+  },
+  orderInfoTextWrap: {
+    flex: 1,
+    gap: 1,
+  },
+  orderInfoDivider: {
+    height: StyleSheet.hairlineWidth,
+    marginLeft: Spacing.four,
   },
 });
